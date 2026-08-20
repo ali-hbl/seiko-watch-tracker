@@ -1,0 +1,6 @@
+# Environnements virtuels
+venv/
+__pycache__/
+
+# Fichiers secrets
+.env
