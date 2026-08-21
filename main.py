@@ -86,8 +86,7 @@ if __name__ == "__main__":
         prix_minimum = min(prix_plausibles)
         print(f"Prix le plus bas détecté dans le texte : {prix_minimum}")
         
-        # TEST : Le seuil est provisoirement à 200 pour le test
-        if prix_minimum < 200: 
+        if prix_minimum < 120: 
             print("Prix sous le seuil ! Envoi de l'alerte Telegram...")
             titre = "🚨 ALERTE PRIX : SEIKO SBTR027 🚨\n\n"
             envoyer_telegram(titre + rapport_nettoye[:3900])
