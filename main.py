@@ -11,7 +11,7 @@ load_dotenv()
 # COMPOSANTS : OUTILS ET LLM
 # =======================================================
 llm_groq = LLM(
-    model="groq/openai/gpt-oss-20b",
+    model="groq/llama-3.1-8b-instant",
     api_key=os.getenv("GROQ_API_KEY")
 )
 
