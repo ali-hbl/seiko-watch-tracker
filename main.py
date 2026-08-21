@@ -7,9 +7,13 @@ from crewai_tools import SerperDevTool
 
 load_dotenv()
 
+# =======================================================
+# COMPOSANTS : OUTILS ET LLM
+# =======================================================
 llm_groq = LLM(
     model="groq/qwen/qwen3.6-27b", 
-    api_key=os.getenv("GROQ_API_KEY")
+    api_key=os.getenv("GROQ_API_KEY"),
+    max_tokens=1000  # On limite la taille de la réponse
 )
 
 recherche_google = SerperDevTool()
