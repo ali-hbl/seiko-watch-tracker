@@ -34,11 +34,12 @@ chasseur_montres = Agent(
 mission_seiko = Task(
     description="""
     Trouve 3 offres actuelles pour la Seiko SBTR027.
-    IMPORTANT - FORMAT DE RÉPONSE OBLIGATOIRE :
-    Sur la toute première ligne de ta réponse, tu DOIS écrire : "PRIX_MIN: [prix]" (où [prix] est uniquement le nombre du prix le plus bas en euros, sans le symbole €. Par exemple : PRIX_MIN: 135).
-    Ensuite, saute une ligne et rédige ton rapport normal avec les 3 offres.
+    RÈGLE DE FORMATAGE ABSOLUE :
+    Tu dois OBLIGATOIREMENT commencer ta réponse par la balise exacte "PRIX_MIN: " suivie du prix le plus bas en chiffres, sans le symbole euro.
+    Exemple : PRIX_MIN: 135
+    Ensuite, saute une ligne et donne tes 3 offres.
     """,
-    expected_output="Ligne 1: PRIX_MIN: [nombre]. Suivi du rapport en texte brut (SANS utiliser d'astérisques **).",
+    expected_output="PRIX_MIN: [prix]\n\n[Le reste du rapport...]",
     agent=chasseur_montres
 )
 
@@ -76,19 +77,20 @@ if __name__ == "__main__":
     # ==========================================
     
     # Cherche le nombre caché après PRIX_MIN:
-    match = re.search(r'PRIX_MIN:\s*(\d+)', rapport_nettoye)
+    match = re.search(r'PRIX_MIN[^\d]*(\d+)', rapport_nettoye, re.IGNORECASE)
     
     if match:
         prix_minimum = int(match.group(1))
         print(f"Prix le plus bas trouvé aujourd'hui : {prix_minimum}€")
         
-        if prix_minimum < 120:
-            print("Prix sous les 120€ ! Envoi de l'alerte Telegram...")
-            titre = "🚨 ALERTE PRIX : SEIKO SBTR027 SOUS LES 120€ ! 🚨\n\n"
+        # TEST : On met 200 provisoirement pour vérifier que l'alerte fonctionne !
+        if prix_minimum < 200:
+            print("Prix sous le seuil ! Envoi de l'alerte Telegram...")
+            titre = "🚨 ALERTE PRIX : SEIKO SBTR027 ! 🚨\n\n"
             texte_a_envoyer = titre + rapport_nettoye[:3900]
             envoyer_telegram(texte_a_envoyer)
         else:
-            print("Le prix est supérieur ou égal à 120€. Pas de message envoyé aujourd'hui.")
+            print("Le prix est supérieur au seuil. Pas de message envoyé aujourd'hui.")
             
     else:
         print("L'Agent n'a pas formaté le prix correctement. On envoie quand même par sécurité.")
