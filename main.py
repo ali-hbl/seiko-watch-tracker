@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from duckduckgo_search import DDGS
 from crewai import Agent, Task, Crew, Process, LLM
 from crewai.tools import tool
-from crewai_tools import ScrapeWebsiteTool # L'outil de lecture de sites web officiel de CrewAI
 
 load_dotenv()
 
@@ -21,29 +20,29 @@ llm_groq = LLM(
 def recherche_web(requete: str) -> str:
     """Cherche des liens et des pages web sur internet."""
     try:
-        results = DDGS().text(requete, max_results=3)
+        results = DDGS().text(requete, max_results=4)
         if not results:
-            return "Aucun résultat."
-        return "\n\n---\n\n".join([f"Titre : {r['title']}\nLien : {r['href']}" for r in results])
+            return "Aucun résultat pour cette recherche précise."
+        
+        # Force l'extraction du "body" (le texte sous le lien bleu Google/DuckDuckGo)
+        return "\n\n---\n\n".join([f"Titre : {r['title']}\nExtrait (Où se trouve peut-être le prix) : {r['body']}\nLien : {r['href']}" for r in results])
     except Exception as e:
-        return f"Erreur : {str(e)}"
-
-# On instancie l'outil qui permet de lire le contenu d'un site web
-outil_lecture_site = ScrapeWebsiteTool()
+        return f"Erreur de recherche : {str(e)}"
 
 # =======================================================
 # COMPOSANTS : AGENT ET MISSION
 # =======================================================
 chasseur_montres = Agent(
     role="Personal Shopper Expert en Horlogerie",
-    goal="Trouver la montre Seiko SBTR027 en stock au meilleur prix sur internet.",
-    backstory="""Tu es un expert en montres japonaises (JDM). Ton client cherche absolument à acheter la Seiko SBTR027 (C'est un chronographe cadran gris-bleu/glacier qui EXISTE bel et bien, ne dis JAMAIS le contraire). 
-    Si ta première recherche échoue, essaie des termes très précis comme : 'Seiko SBTR027 Sakura Watches', 'Seiko SBTR027 eBay', ou 'Seiko SBTR027 Discovery Japan'. 
-    Trouve les boutiques, lis les prix et synthétise l'info.""",
+    goal="Trouver le prix de la Seiko SBTR027 uniquement en lisant les extraits de recherche.",
+    backstory="""Tu es un expert en montres JDM. Ton client veut la Seiko SBTR027.
+    RÈGLE ABSOLUE N°1 : Tu NE DOIS JAMAIS utiliser les balises <think>. Réponds TOUJOURS directement.
+    RÈGLE ABSOLUE N°2 : Les sites e-commerce bloquent les robots. Tu ne peux pas visiter les pages.
+    Ta stratégie : Fais des recherches (ex: 'Seiko SBTR027 price Sakura Watches' ou 'SBTR027 Chrono24 USD') et déduis le prix directement depuis l''Extrait' des résultats de recherche. Ne cherche pas la perfection, donne les indices que tu trouves.""",
     verbose=True, 
     allow_delegation=False,
-    max_iter=4, 
-    tools=[recherche_web, outil_lecture_site],
+    max_iter=3, 
+    tools=[recherche_web], # On ne lui donne QUE cet outil !
     llm=llm_groq 
 )
 
@@ -90,20 +89,18 @@ def envoyer_telegram(message):
 # =======================================================
 # EXECUTION
 # =======================================================
+# =======================================================
+# EXECUTION
+# =======================================================
 if __name__ == "__main__":
     resultat_final = equipe.kickoff()
+    
+    # On prend le résultat directement
     rapport_texte = str(resultat_final)
     
-    # S'il a fini de penser, on prend tout ce qu'il y a APRES la balise
-    if "</think>" in rapport_texte:
-        rapport_nettoye = rapport_texte.split("</think>")[-1].strip()
-    else:
-        # S'il a été coupé en pleine réflexion
-        rapport_nettoye = re.sub(r'<think>.*', '', rapport_texte, flags=re.DOTALL).strip()
-        
-        if not rapport_nettoye:
-            rapport_nettoye = "⚠️ L'agent n'a pas trouvé de résultats concluants aujourd'hui ou a été interrompu."
-
+    # On s'assure juste de nettoyer au cas où l'IA désobéit un tout petit peu
+    rapport_nettoye = re.sub(r'<think>.*?</think>', '', rapport_texte, flags=re.DOTALL).strip()
+    
     titre = "⌚️ **RAPPORT QUOTIDIEN SEIKO SBTR027** ⌚️\n\n"
     texte_a_envoyer = titre + rapport_nettoye[:3900] 
     
