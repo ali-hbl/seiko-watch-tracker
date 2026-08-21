@@ -37,13 +37,12 @@ outil_lecture_site = ScrapeWebsiteTool()
 chasseur_montres = Agent(
     role="Personal Shopper Expert en Horlogerie",
     goal="Trouver la montre Seiko SBTR027 en stock au meilleur prix sur internet.",
-    backstory="""Tu es un expert en montres japonaises (JDM). Ton client cherche 
-    absolument à acheter une Seiko SBTR027. Tu sais utiliser la recherche web pour 
-    trouver des boutiques (comme Chrono24, Sakura Watches, eBay, etc.), et tu sais 
-    lire ces sites pour extraire le prix exact et vérifier si elle est en stock.""",
+    backstory="""Tu es un expert en montres japonaises (JDM). Ton client cherche absolument à acheter la Seiko SBTR027 (C'est un chronographe cadran gris-bleu/glacier qui EXISTE bel et bien, ne dis JAMAIS le contraire). 
+    Si ta première recherche échoue, essaie des termes très précis comme : 'Seiko SBTR027 Sakura Watches', 'Seiko SBTR027 eBay', ou 'Seiko SBTR027 Discovery Japan'. 
+    Trouve les boutiques, lis les prix et synthétise l'info.""",
     verbose=True, 
     allow_delegation=False,
-    max_iter=4, # Limite pour ne pas exploser le quota Telegram/Groq
+    max_iter=4, 
     tools=[recherche_web, outil_lecture_site],
     llm=llm_groq 
 )
@@ -93,15 +92,19 @@ def envoyer_telegram(message):
 # =======================================================
 if __name__ == "__main__":
     resultat_final = equipe.kickoff()
-
-    #  Convertit le résultat en texte
     rapport_texte = str(resultat_final)
     
-    # Eefface tout ce qui ressemble à <think> ... </think>
-    rapport_nettoye = re.sub(r'<think>.*?</think>', '', rapport_texte, flags=re.DOTALL).strip()
-    
+    # S'il a fini de penser, on prend tout ce qu'il y a APRES la balise
+    if "</think>" in rapport_texte:
+        rapport_nettoye = rapport_texte.split("</think>")[-1].strip()
+    else:
+        # S'il a été coupé en pleine réflexion
+        rapport_nettoye = re.sub(r'<think>.*', '', rapport_texte, flags=re.DOTALL).strip()
+        
+        if not rapport_nettoye:
+            rapport_nettoye = "⚠️ L'agent n'a pas trouvé de résultats concluants aujourd'hui ou a été interrompu."
+
     titre = "⌚️ **RAPPORT QUOTIDIEN SEIKO SBTR027** ⌚️\n\n"
-
-    texte_a_envoyer = titre + rapport_nettoye[:3900]
-
+    texte_a_envoyer = titre + rapport_nettoye[:3900] 
+    
     envoyer_telegram(texte_a_envoyer)
