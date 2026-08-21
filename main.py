@@ -1,5 +1,6 @@
 import os
 import requests
+import re # Pour utiliser les regex
 from dotenv import load_dotenv
 from duckduckgo_search import DDGS
 from crewai import Agent, Task, Crew, Process, LLM
@@ -57,7 +58,7 @@ mission_seiko = Task(
     4. Le lien URL direct vers la montre.
     Si tu ne trouves pas l'info exacte, dis-le clairement.
     """,
-    expected_output="Un rapport structuré en Markdown avec les offres trouvées, triées de la moins chère à la plus chère.",
+    expected_output="Un rapport final structuré en Markdown, EXCLUSIVEMENT EN FRANÇAIS. Ne fournis aucun détail sur ta méthode de recherche, donne juste le résultat net et concis.",
     agent=chasseur_montres
 )
 
@@ -92,9 +93,15 @@ def envoyer_telegram(message):
 # =======================================================
 if __name__ == "__main__":
     resultat_final = equipe.kickoff()
+
+    #  Convertit le résultat en texte
+    rapport_texte = str(resultat_final)
     
-    # Formatage spécial pour Telegram pour plus de lisibilité
+    # Eefface tout ce qui ressemble à <think> ... </think>
+    rapport_nettoye = re.sub(r'<think>.*?</think>', '', rapport_texte, flags=re.DOTALL).strip()
+    
     titre = "⌚️ **RAPPORT QUOTIDIEN SEIKO SBTR027** ⌚️\n\n"
-    texte_a_envoyer = titre + str(resultat_final)[:3900] 
-    
+
+    texte_a_envoyer = titre + rapport_nettoye[:3900]
+
     envoyer_telegram(texte_a_envoyer)
