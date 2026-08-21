@@ -11,9 +11,8 @@ load_dotenv()
 # COMPOSANTS : OUTILS ET LLM
 # =======================================================
 llm_groq = LLM(
-    model="groq/qwen/qwen3.6-27b", 
-    api_key=os.getenv("GROQ_API_KEY"),
-    max_tokens=1000  # On limite la taille de la réponse
+    model="groq/openai/gpt-oss-20b",
+    api_key=os.getenv("GROQ_API_KEY")
 )
 
 recherche_google = SerperDevTool()
@@ -26,7 +25,7 @@ chasseur_montres = Agent(
     RÈGLE N°2 : Cherche via Google et extrais le prix le plus bas trouvé (converti en EUROS).""",
     verbose=True, 
     allow_delegation=False,
-    max_iter=3, 
+    max_iter=2,
     tools=[recherche_google],
     llm=llm_groq 
 )
