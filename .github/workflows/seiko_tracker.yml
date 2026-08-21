@@ -1,0 +1,30 @@
+name: Tracker Seiko SBTR027
+
+on:
+    schedule:
+        # 09:00 UTC correspond à 11:00 en Belgique (Heure d'été CEST)
+        - cron: '0 9 * * *'
+    workflow_dispatch: # Ce mot magique ajoute un bouton "Play" sur GitHub pour tester manuellement
+
+jobs:
+    lancer-agent:
+        runs-on: ubuntu-latest # Demande à GitHub de prêter un serveur Linux
+        steps:
+            - name: 📥 Récupérer le code
+              uses: actions/checkout@v4
+
+            - name: 🐍 Installer Python 3.11
+              uses: actions/setup-python@v5
+              with:
+                  python-version: '3.11'
+                  cache: 'pip'
+
+            - name: 📦 Installer les outils (requirements)
+              run: pip install -r requirements.txt
+
+            - name: 🚀 Réveiller l'Agent IA
+              env: # On injecte les secrets de manière sécurisée
+                  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+                  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+                  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+              run: python main.py
