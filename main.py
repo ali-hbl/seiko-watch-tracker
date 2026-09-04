@@ -16,7 +16,7 @@ load_dotenv()
 llm_groq = LLM(
     model="groq/qwen/qwen3.6-27b", 
     api_key=os.getenv("GROQ_API_KEY"),
-    max_completion_tokens=2000
+    max_completion_tokens=3500
 )
 
 recherche_google = SerperDevTool()
@@ -28,8 +28,9 @@ chasseur_montres = Agent(
     role="Personal Shopper Expert en Horlogerie",
     goal="Trouver 3 offres pour la montre Seiko SBTR027 sur internet.",
     backstory="""Tu es un expert en montres japonaises (JDM). Ton client cherche la Seiko SBTR027.
-    RÈGLE N°1 : Cherche via Google sur des sites comme Chrono24, eBay ou Sakura Watches.
-    RÈGLE N°2 : Donne les prix exacts trouvés en euros ou dollars dans ton rapport final.""",
+    RÈGLE N°1 : Si tu dois réfléchir, sois le plus bref et concis possible. Va droit au but.
+    RÈGLE N°2 : Cherche via Google sur des sites comme Chrono24, eBay ou Sakura Watches.
+    RÈGLE N°3 : Donne les prix exacts trouvés en euros ou dollars dans ton rapport final.""",
     verbose=True, 
     allow_delegation=False,
     max_iter=1, # On garde 1 seule recherche pour protéger le quota 
