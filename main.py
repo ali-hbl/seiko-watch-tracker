@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from crewai import Agent, Task, Crew, Process, LLM
 from crewai_tools import SerperDevTool
 
+os.environ["LITELLM_DROP_PARAMS"] = "True"
 load_dotenv()
 
 # =======================================================
